@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+# vim: ft=python
+import sys
+import re
+import json
+from subprocess import check_output
+
+class GitManager:
+    current = False
+
+    def __init__(self):
+        try:
+            target_ref = sys.argv[1]
+        except IndexError:
+            target_ref = 'HEAD'
+        try:
+            self.current = self.process(['git', 'rev-parse', target_ref])
+        except:
+            sys.exit('Error!')
+
+    def process(self, params):
+        output = check_output(params)
+        return output.decode('latin1').strip()
+
+    def getVersion(self):
+        version = ""
+        try:
+            versionTag = self.process(['git', 'describe', self.current, '--tags'])
+
+            try:
+                versionParams = re.search( r'v([0-9]+)\.([0-9]+)', versionTag, re.M|re.I)
+                version += ".".join(versionParams.groups())
+            except:
+                version += "0.0"
+
+            try:
+                versionCount = re.search( r'-([0-9]+)-', versionTag, re.M|re.I)
+                version += "." + versionCount.group(1)
+            except:
+                version += ".0"
+
+        except:
+            version += "0.0.0"
+            
+        return version
+
+    def getCode(self):
+        return self.process(['git', 'rev-list', self.current, '--count'])
+
+    def getBranch(self):
+        return self.process(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+
+    def printConfigJson(self):
+        data = {
+            'version' : {
+                'name' : self.getVersion(),
+                'code' : self.getCode(),
+                'commit': self.current,
+                'branch': self.getBranch()
+            }
+        }
+
+        print json.dumps(data)
+
+
+#----------------------
+manager = GitManager()
+manager.printConfigJson()
