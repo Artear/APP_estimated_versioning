@@ -23,7 +23,7 @@ buildscript {
         )
 
         project.ext.set("release_versioning_commit", json.version.commit)
-        project.ext.set("release_versioning_code", json.version.code)
+        project.ext.set("release_versioning_code", json.version.code.toInteger())
         project.ext.set("release_versioning_name", json.version.name)
         project.ext.set("release_versioning_branch", json.version.branch)
     }
