@@ -1,0 +1,30 @@
+import groovy.json.JsonSlurper
+
+buildscript {
+    def version = '1.1'
+    def path = "./am_gradle/build/release_versioning/v${version}"
+
+    repositories {
+        def url_release_versioning = "https://raw.githubusercontent.com/Artear/APP_release_versioning"
+        def folder = new File(path)
+        if( !folder.exists() ) {
+            folder.mkdirs()
+        }
+
+        def release_versioning_file = new File("${folder.path}/release_versioning")
+        if( !release_versioning_file.exists() ) {
+            new URL("${url_release_versioning}/v${version}/release_versioning").withInputStream{
+                i -> release_versioning_file.withOutputStream{ it << i }
+            }
+        }
+
+        def json = new JsonSlurper().parseText(
+                "python ${path}/release_versioning".execute().text.trim()
+        )
+
+        project.ext.set("release_versioning_commit", json.version.commit)
+        project.ext.set("release_versioning_code", json.version.code)
+        project.ext.set("release_versioning_name", json.version.name)
+        project.ext.set("release_versioning_branch", json.version.branch)
+    }
+}
